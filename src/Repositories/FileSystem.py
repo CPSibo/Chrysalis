@@ -4,13 +4,28 @@ import pathlib
 import re
 
 @attr.s
-class FileInfo2:
+class FileSystem:
+
+    # region Initialized attributes
+
     path = attr.ib(type=str)
+
+    # endregion
+
+
+    # region Attributes
+
     name = None
     ext = None
     directory = None
     modified = None
     size = None
+
+    # endregion
+
+
+
+    # region Constructors
 
     def __attrs_post_init__(self):
         path_obj = pathlib.Path(self.path)
@@ -21,3 +36,5 @@ class FileInfo2:
         self.directory = str(path_obj.parent)
         self.modified = time.ctime(path_obj.stat().st_mtime)
         self.size = path_obj.stat().st_size
+
+    # endregion

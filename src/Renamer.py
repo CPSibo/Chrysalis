@@ -3,14 +3,13 @@ import pathlib
 import re
 import itertools
 
-from TVDBAPI import TVDBAPI
-from FileInfo import FileInfo2
-from Logger import Logger
+from Utilities.Logger import Logger
+from Subscription import Subscription
 
 @attr.s
 class Renamer:
     file = attr.ib(type=str)
-    settings = attr.ib(type=dict)
+    settings = attr.ib(type=Subscription)
     path_info = None
     series = None
     episode = None
@@ -36,19 +35,21 @@ class Renamer:
 
 
     def get_api_info(self):
+        from Repositories.TVDB import TVDB
+        
         Logger.log(r'API', r'Querying...', 1)
 
-        api = TVDBAPI()
+        api = TVDB()
         api.login()
 
-        self.series = api.get_series(self.settings['rename output']['series id'])
-        episodes = api.get_series_episodes(self.settings['rename output']['series id'])
+        self.series = api.get_series(self.settings.post_processing.series_id)
+        episodes = api.get_series_episodes(self.settings.post_processing.series_id)
 
         if episodes is None or len(episodes) == 0:
             Logger.log(r'API', r'No episodes returned!', -1)
             return -1
 
-        file_matches = re.match(self.settings['rename output']['pattern'], str(self.path_info))
+        file_matches = re.match(self.settings.post_processing.pattern, str(self.path_info))
 
         self.episode = api.match_episode(episodes, file_matches.group('episodeName'))
 
@@ -103,7 +104,7 @@ class Renamer:
 
 
     def replace_values(self, info, template):
-        template_matches = re.findall(r'({(series|episode|file)\.(\w+)(:[^}]+?)?})', template)
+        template_matches = re.findall(r'({(series|episode|file|special)\.(\w+)(:[^}]+?)?})', template)
 
         replaced_template = template
 
@@ -126,6 +127,8 @@ class Renamer:
             value = self.episode[replacement_item]
         elif replacement_type == 'file':
             value = getattr(info, replacement_item)
+        elif replacement_type == 'special':
+            value = getattr(special, replacement_item)
 
         formatted_value = value
 
@@ -139,10 +142,12 @@ class Renamer:
 
 
     def rename_file(self, path, template, sanitize = True):
-        if not path.exists():
+        from Repositories.FileSystem import FileSystem
+
+        if not path.exists(): 
             return
 
-        info = FileInfo2(path = path)
+        info = FileSystem(path = path)
 
         replaced_template = self.replace_values(info, template)
 
@@ -162,7 +167,7 @@ class Renamer:
     def rename_video(self):
         self.rename_file(
             self.path_info, 
-            self.settings['rename output']['video']
+            self.settings.post_processing.video
         )
 
 
@@ -177,14 +182,14 @@ class Renamer:
         for suffix in suffixes:
             self.rename_file(
                 self.path_info.with_suffix(suffix), 
-                self.settings['rename output']['thumbnail']
+                self.settings.post_processing.thumbnail
             )
 
 
     def rename_description(self):
         self.rename_file(
             self.path_info.with_suffix('.description'), 
-            self.settings['rename output']['description']
+            self.settings.post_processing.description
         )
 
 
@@ -200,7 +205,7 @@ class Renamer:
             for path in self.path_info.parent.glob(suffix):
                 self.rename_file(
                     path, 
-                    self.settings['rename output']['subtitle']
+                    self.settings.post_processing.subtitle
                 )
 
 
@@ -208,7 +213,7 @@ class Renamer:
         return (
             self.rename_file(
                 self.path_info.parent, 
-                self.settings['rename output']['folder']
-                ),
+                self.settings.post_processing.folder
+            ),
             self.episode['airedSeason']
         )

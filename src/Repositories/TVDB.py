@@ -2,9 +2,9 @@ import os
 import urllib3
 import json
 
-from Logger import Logger
+from Utilities.Logger import Logger
 
-class TVDBAPI:
+class TVDB:
     base_url = 'https://api.thetvdb.com/'
     username = None
     user_key = None
