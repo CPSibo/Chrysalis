@@ -8,18 +8,18 @@ class FileSystem:
 
     # region Initialized attributes
 
-    path = attr.ib(type=str)
+    path : str = attr.ib(type=str)
 
     # endregion
 
 
     # region Attributes
 
-    name = None
-    ext = None
-    directory = None
-    modified = None
-    size = None
+    name : str = None
+    ext : str = None
+    directory : str = None
+    modified : str = None
+    size : int = None
 
     # endregion
 

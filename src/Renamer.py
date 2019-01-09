@@ -29,7 +29,7 @@ class Renamer:
 
         new_folder = self.rename_folder()
 
-        Logger.tab -= 1
+        Logger.tabs -= 1
 
         return new_folder
 
@@ -53,7 +53,7 @@ class Renamer:
 
         self.episode = api.match_episode(episodes, file_matches.group('episodeName'))
 
-        Logger.tab -= 1
+        Logger.tabs -= 1
 
 
     

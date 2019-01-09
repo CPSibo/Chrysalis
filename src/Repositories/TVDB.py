@@ -5,12 +5,26 @@ import json
 from Utilities.Logger import Logger
 
 class TVDB:
-    base_url = 'https://api.thetvdb.com/'
-    username = None
-    user_key = None
-    api_key = None
-    jwt = None
-    http = None
+    """
+    API wrapper for TheTVDB.com.
+
+    Attributes:
+        base_url (str): Minimal URL for the API.
+        username (str): API username.
+        user_key (str): Secret key for the user.
+        api_key (str): Secret API key for the user.
+        jwt (str): JWT returned from login.
+        http (urllib3.PoolManager): PoolManager for class use.
+    """
+
+    base_url: str = 'https://api.thetvdb.com/'
+    username: str = None
+    user_key: str = None
+    api_key: str = None
+    jwt: str = None
+    http: urllib3.PoolManager = None
+
+
 
     def __init__(self):
         self.username = os.getenv("tvdb_username")
@@ -20,7 +34,13 @@ class TVDB:
         urllib3.disable_warnings()
         self.http = urllib3.PoolManager()
 
+
+
     def login(self):
+        """
+        Pass the user credentials to receive a JWT.
+        """
+
         Logger.log(r'API', r'Logging in...')
 
         request_data = {
@@ -42,7 +62,19 @@ class TVDB:
 
         self.jwt = response_data['token']
 
-    def get_series(self, series_id):
+
+
+    def get_series(self, series_id: int):
+        """
+        Query series information.
+        
+        Args:
+            series_id (int): Unique ID of the series.
+        
+        Returns:
+            dict: Series infomation.
+        """
+
         Logger.log(r'API', r'Querying series...')
 
         response = self.http.request(
@@ -58,7 +90,21 @@ class TVDB:
 
         return response_data['data']
 
-    def get_series_episodes(self, series_id):
+
+
+    def get_series_episodes(self, series_id: int):
+        """
+        Query episode information for series.
+
+        Automatically retrieves all pages.
+        
+        Args:
+            series_id (int): Unique ID of the series.
+        
+        Returns:
+            list: List of dicts for episodes.
+        """
+
         Logger.log(r'API', r'Querying episodes...')
 
         page = 1
@@ -88,7 +134,21 @@ class TVDB:
 
         return episodes
 
-    def match_episode(self, episodes, title):
+
+
+    def match_episode(self, episodes: list, title: str):
+        """
+        Attempts to find the series' episode that
+        matches the given title from youtube-dl.
+        
+        Args:
+            episodes (list): List of dicts of episode information.
+            title (str): The title to match against.
+        
+        Returns:
+            dict: The matched episode.
+        """
+
         import pylev
 
         for episode in episodes:

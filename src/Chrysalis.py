@@ -1,3 +1,5 @@
+# region Imports
+
 import os
 import subprocess
 import pathlib
@@ -10,16 +12,20 @@ from Utilities.Arguments import args
 from Utilities.Logger import Logger
 from Subscription import Subscription
 
-# Description:
-# 	The entry point for Chrysalis.
-#
-# Params:
-#	none
+# endregion
+
+
+
 class Chrysalis:
+	"""
+	The entry point for Chrysalis.
+
+	Attributes:
+		subscriptions (dict): Decoded subscription settings.
+	"""
 
 	# region Attributes
 
-	# Decoded subscription settings.
 	subscriptions = []
 
 	# endregion
@@ -39,16 +45,12 @@ class Chrysalis:
 
 	# region Functions
 
-	# Description:
-	# 	Reads in subscriptions.json and decodes all the
-	# 	settings into Subscription objects.
-	#
-	# Params:
-	#	none
-	#
-	# Returns: 
-	# 	void
 	def load_subscriptions(self):
+		"""
+		Reads in subscriptions.json and decodes all the settings 
+		into Subscription objects.
+		"""
+
 		with open('src/subscriptions.json', 'r') as myfile:
 			subscription_encoded=myfile.read()
 
@@ -61,16 +63,16 @@ class Chrysalis:
 
 
 
-	# Description:
-	# 	Runs youtube-dl and the post-processing for the given
-	# 	subscription.
-	#
-	# Params:
-	#	Subscription subscription: The subscription to process.
-	#
-	# Returns: 
-	# 	void
 	def process_subscription(self, subscription: Subscription):
+		"""
+		Runs youtube-dl and the post-processing for the given subscription.
+
+		Parameters:
+			subscription (Subscription): The subscription to process.
+		"""
+
+		Logger.log(r'Chrysalis', r'Processing "{}"...'.format(subscription.name))
+
 		self.setup_staging_directory(subscription)
 
 		command = self.construct_command(subscription)
@@ -79,31 +81,34 @@ class Chrysalis:
 
 
 
-	# Description:
-	#	Constructs and creates the staging directory
-	# 	for the given subscription.
-	#
-	# Params:
-	#	Subscription subscription: The subscription to process.
-	#
-	# Returns:
-	#	str: The path to the staging directory.
 	def setup_staging_directory(self, subscription: Subscription) -> str:
+		"""
+		Constructs and creates the staging directory for the given subscription.
+
+		Parameters:
+			subscription (Subscription): The subscription to process.
+
+		Returns:
+			str: The path to the staging directory.
+		"""
+
 		pathlib.Path(subscription.staging_directory).mkdir(parents=True, exist_ok=True) 
 
 		return subscription.staging_directory
 
 
 
-	# Description:
-	#	Builds the youtube-dl command for the given subscription.
-	#
-	# Params:
-	#	Subscription subscription: The subscription to process.
-	#
-	# Returns:
-	#	str: The youtube-dl command with all desired arguments.
 	def construct_command(self, subscription: Subscription) -> str:
+		"""
+		Builds the youtube-dl command for the given subscription.
+		
+		Args:
+			subscription (Subscription): The subscription to process.
+		
+		Returns:
+			str: The youtube-dl command with all desired arguments.
+		"""
+
 		command =  r'youtube-dl'
 
 		# Add the youtube-dl config path.
@@ -148,21 +153,25 @@ class Chrysalis:
 				subscription.logging.path
 			)
 
+		Logger.log(r'Chrysalis', r'Command to be run: [{}]'.format(command))
+
 		return command
 
 
 
-	# Description:
-	# 	Runs the post-processing for the given youtube-dl output file.
-	#
-	# Params:
-	#	str file:                  Absolute path to the youtube-dl output file.
-	#	Subscription subscription: The settings to process the file under.
-	#
-	# Returns:
-	#	str: The absolute path to the folder where all the files were moved.
-	#	int: The season number of the file processed.
 	def rename(self, file: str, subscription: Subscription) -> (str, int):
+		"""
+		Runs the post-processing for the given youtube-dl output file.
+		
+		Args:
+			file (str): Absolute path to the youtube-dl output file.
+			subscription (Subscription): The settings to process the file under.
+		
+		Returns:
+			str: The absolute path to the folder where all the files were moved.
+			int: The season number of the file processed.
+		"""
+
 		from Renamer import Renamer
 
 		Logger.log(r'Crysalis', r'Starting Renamer for {}'.format(file), 1)
@@ -174,25 +183,24 @@ class Chrysalis:
 
 		(new_folder, season) = renamer.rename()
 
-		Logger.tab -= 1
+		Logger.tabs -= 1
 
 		return (new_folder, season)
 
 
 
-	# Description:
-	# 	Moves the post-processed folder from the staging area
-	# 	to the final path specified by the subscription.
-	#
-	# Params:
-	#	str current_path:          The absolute path to the staging-area folder.
-	#	Subscription subscription: The settings under which to process
-	#							   the files.
-	#	int season:                The season number for episode processed.
-	#
-	# Returns:
-	#	void
 	def move_from_staging_area(self, current_path: str, subscription: Subscription, season: int):
+		"""
+		Moves the post-processed folder from the staging area
+		to the final path specified by the subscription.
+		
+		Args:
+			current_path (str): The absolute path to the staging-area folder.
+			subscription (Subscription): The settings under which to process
+				the files.
+			season (int): The season number for episode processed.
+		"""
+
 		current_path = pathlib.Path(current_path)
 
 		out_dir = subscription.post_processing.output_directory
@@ -207,15 +215,14 @@ class Chrysalis:
 
 
 
-	# Description:
-	# 	Entry point for the Chrysalis process.
-	#
-	# Params:
-	#	none
-	#
-	# Returns:
-	#	int: Status code.
 	def run(self) -> int:
+		"""
+		Entry point for the Chrysalis process.
+		
+		Returns:
+			int: Status code.
+		"""
+
 		if args.rename is not None:
 			subs = [item for item in self.subscriptions if item['name'] == args.subscription]
 
@@ -231,5 +238,7 @@ class Chrysalis:
 				self.process_subscription(subscription)
 
 	# endregion
+
+
 
 Chrysalis().run()

@@ -1,47 +1,60 @@
+# region Imports
+
 import attr
 import os
 
+# endregion
+
+
+
 @attr.s
 class Subscription:
+    """
+    Collection of settings for a given subscription.
+
+    Attributes:
+        dict_config (dict): Dictionary of the settings to import.
+    """
+
     @attr.s
     class Logging:
-        path = attr.ib(type=str)
-        append = attr.ib(type=bool)
+        path: str = attr.ib()
+        append: bool = attr.ib()
 
     @attr.s
     class YoutubedlConfig:
-        archive = attr.ib(type=str)
-        metadata_format = attr.ib(type=str)
-        output_format = attr.ib(type=str)
-        config = attr.ib(type=str)
-        extra_commands = attr.ib(type=str)
+        archive: str = attr.ib()
+        metadata_format: str = attr.ib()
+        output_format: str = attr.ib()
+        config: str = attr.ib()
+        extra_commands: str = attr.ib()
 
     @attr.s
     class PostProcessing:
-        output_directory = attr.ib(type=str)
+        output_directory: str = attr.ib()
 
-        db = attr.ib(type=str)
-        series_id = attr.ib(type=int)
+        db: str = attr.ib()
+        series_id: int = attr.ib()
 
-        pattern = attr.ib(type=str)
+        pattern: str = attr.ib()
 
-        season_folder = attr.ib(type=str)
-        episode_folder = attr.ib(type=str)
-        video = attr.ib(type=str)
-        subtitle = attr.ib(type=str)
-        thumbnail = attr.ib(type=str)
-        description = attr.ib(type=str)
+        season_folder: str = attr.ib()
+        episode_folder: str = attr.ib()
+        video: str = attr.ib()
+        subtitle: str = attr.ib()
+        thumbnail: str = attr.ib()
+        description: str = attr.ib()
 
     dict_config = attr.ib(type=dict)
 
-    name = None
-    url = None
+    name: str = None
+    url: str = None
 
-    logging = None
-    youtubedl_config = None
-    post_processing = None
+    logging: Logging = None
+    youtubedl_config: YoutubedlConfig = None
+    post_processing: PostProcessing = None
 
-    staging_directory = None
+    staging_directory: str = None
 
 
 
