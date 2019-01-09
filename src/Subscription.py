@@ -1,4 +1,5 @@
 import attr
+import os
 
 @attr.s
 class Subscription:
@@ -40,6 +41,8 @@ class Subscription:
     youtubedl_config = None
     post_processing = None
 
+    staging_directory = None
+
 
 
     def __attrs_post_init__(self):
@@ -75,8 +78,10 @@ class Subscription:
             description = self.get_setting('post-processing.description'),
         )
 
-
-    
+        self.staging_directory = os.path.join(
+			os.getenv('staging_directory'), 
+			self.name
+		)
 
 
 
