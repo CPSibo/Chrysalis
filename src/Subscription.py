@@ -33,8 +33,9 @@ class Subscription:
     class PostProcessing:
         output_directory: str = attr.ib()
 
-        db: str = attr.ib()
         series_id: int = attr.ib()
+
+        repositories: list = attr.ib()
 
         pattern: str = attr.ib()
 
@@ -44,6 +45,10 @@ class Subscription:
         subtitle: str = attr.ib()
         thumbnail: str = attr.ib()
         description: str = attr.ib()
+
+        def __attrs_post_init__(self):
+            for repo in self.repositories:
+                importlib.import_module('Repositories.' + repo)
 
     dict_config = attr.ib(type=dict)
 
@@ -78,8 +83,9 @@ class Subscription:
         self.post_processing = self.PostProcessing(
             output_directory = self.get_setting('post-processing.output directory'),
 
-            db = self.get_setting('post-processing.db'),
             series_id = self.get_setting('post-processing.series id'),
+
+            repositories = self.get_setting('post-processing.repositories'),
 
             pattern = self.get_setting('post-processing.pattern'),
 

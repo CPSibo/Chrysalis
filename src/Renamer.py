@@ -1,3 +1,5 @@
+# region Imports
+
 import attr
 import pathlib
 import re
@@ -5,17 +7,43 @@ import itertools
 
 from Utilities.Logger import Logger
 from Subscription import Subscription
+from Repositories.FileSystem import FileSystem
+
+# endregion
+
+
 
 @attr.s
 class Renamer:
-    file = attr.ib(type=str)
+    """
+    Controlling class for the renaming facilities.
+
+    Attributes:
+        file (str): Path to the file being processed.
+        settings (Subscription): The subscription settings
+            used for this file.
+
+        path_info (pathlib.Path): Path object for the file.
+        series (dict): Series info for the file.
+        episode (dict): Episode info for the file.
+    """
+
+    file: str = attr.ib()
     settings = attr.ib(type=Subscription)
-    path_info = None
-    series = None
-    episode = None
+    path_info: pathlib.Path = None
+    series: dict = None
+    episode: dict = None
+    repositories: list = []
 
 
     def rename(self):
+        """
+        Runs all renaming post-processing on the file.
+        
+        Returns:
+            str: Path to the renamed output directory.
+        """
+
         self.path_info = pathlib.Path(self.file)
 
         Logger.log(r'Renamer', r'Processing {}...'.format(self.path_info.parent), 1)
@@ -35,6 +63,10 @@ class Renamer:
 
 
     def get_api_info(self):
+        """
+        Retrieves the API info for the file.
+        """
+
         from Repositories.TVDB import TVDB
         
         Logger.log(r'API', r'Querying...', 1)
@@ -103,7 +135,18 @@ class Renamer:
         return result
 
 
-    def replace_values(self, info, template):
+    def replace_values(self, info: FileSystem, template: str):
+        """
+        Substitutes formatting tokens with their real values.
+        
+        Args:
+            info (FileSystem): FileSystem DB info for the file.
+            template (str): Output format template.
+        
+        Returns:
+            str: Substituted output template.
+        """
+
         template_matches = re.findall(r'({(series|episode|file|special)\.(\w+)(:[^}]+?)?})', template)
 
         replaced_template = template
@@ -114,7 +157,19 @@ class Renamer:
         return replaced_template
 
     
-    def replace_value(self, info, match, replaced_template):
+    def replace_value(self, info: FileSystem, match: re.match, replaced_template: str):
+        """
+        Replaces a formatting token with its real value.
+        
+        Args:
+            info (FileSystem): FileSystem DB info for the file.
+            match (match): The regex match of the token.
+            replaced_template (str): Output format template.
+        
+        Returns:
+            str: Substituted output template.
+        """
+
         replacement_type = match[1]
         replacement_item = match[2]
         replacement_format = match[3] if len(match) > 2 else None
@@ -141,8 +196,20 @@ class Renamer:
 
 
 
-    def rename_file(self, path, template, sanitize = True):
-        from Repositories.FileSystem import FileSystem
+    def rename_file(self, path: str, template: str, sanitize: bool = True):
+        """
+        Renames a given file according to a given template.
+        
+        Args:
+            path (str): Path to the file to rename.
+            template (str): Output template to rename the file by.
+            sanitize (bool, optional): Defaults to True. True to
+                replace path delimiters within the substituted
+                template to avoid unexpected directories.
+        
+        Returns:
+            str: The renamed path to the file.
+        """
 
         if not path.exists(): 
             return
@@ -160,11 +227,15 @@ class Renamer:
 
         Logger.log(r'Renamer', r'{} => {}'.format(path.name, replaced_template))
 
-        return path.with_name(replaced_template)
+        return new_filename
 
 
 
     def rename_video(self):
+        """
+        Renames the video file.
+        """
+
         self.rename_file(
             self.path_info, 
             self.settings.post_processing.video
@@ -172,6 +243,10 @@ class Renamer:
 
 
     def rename_thumbnails(self):
+        """
+        Renames the video thumbnails.
+        """
+
         suffixes = [
             '.jpg',
             '.jpeg',
@@ -187,6 +262,10 @@ class Renamer:
 
 
     def rename_description(self):
+        """
+        Renames the video description.
+        """
+
         self.rename_file(
             self.path_info.with_suffix('.description'), 
             self.settings.post_processing.description
@@ -194,6 +273,10 @@ class Renamer:
 
 
     def rename_subtitles(self):
+        """
+        Renames the video subtitles.
+        """
+
         suffixes = [
             '*.srt',
             '*.ass',
@@ -210,6 +293,13 @@ class Renamer:
 
 
     def rename_folder(self):
+        """
+        Renames the video folder.
+        
+        Returns:
+            str: Path to the renamed folder.
+        """
+
         return (
             self.rename_file(
                 self.path_info.parent, 

@@ -3,12 +3,16 @@ import time
 import pathlib
 import re
 
+from Repositories.Repository import Repository, RepositoryTypes
+
+
+
 @attr.s
-class FileSystem:
+class FileSystem(Repository):
 
     # region Initialized attributes
 
-    path : str = attr.ib(type=str)
+    path : str = attr.ib()
 
     # endregion
 
@@ -28,6 +32,9 @@ class FileSystem:
     # region Constructors
 
     def __attrs_post_init__(self):
+        self.type = RepositoryTypes.FILE
+        self.source = 'os'
+
         path_obj = pathlib.Path(self.path)
 
         self.name = path_obj.stem

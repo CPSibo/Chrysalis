@@ -72,11 +72,17 @@
 			// Absolute path to where processed files of this series should be placed.
 			"output directory":	"/path/to/my/media/files/My Favorite Show",
 
-			// API to query for series & episode info.
-			"db":				"tvdb",
-
 			// ID of the series within the DB above.
 			"series id":		0,
+
+			// List of repositories to use for token
+			// replacement in renaming.
+			"repositories":
+			[
+				"tvdb",
+				"os",
+				"chrysalis"
+			],
 
 			/*
 				Create the regex pattern to run against youtube-dl's outputted video

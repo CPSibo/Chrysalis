@@ -1,10 +1,10 @@
 import os
-import urllib3
 import json
 
+from Repositories.Repository import Repository, RepositoryTypes
 from Utilities.Logger import Logger
 
-class TVDB:
+class TVDB(Repository):
     """
     API wrapper for TheTVDB.com.
 
@@ -14,7 +14,6 @@ class TVDB:
         user_key (str): Secret key for the user.
         api_key (str): Secret API key for the user.
         jwt (str): JWT returned from login.
-        http (urllib3.PoolManager): PoolManager for class use.
     """
 
     base_url: str = 'https://api.thetvdb.com/'
@@ -22,17 +21,16 @@ class TVDB:
     user_key: str = None
     api_key: str = None
     jwt: str = None
-    http: urllib3.PoolManager = None
 
 
 
     def __init__(self):
+        self.type = RepositoryTypes.EPISODE | RepositoryTypes.SERIES
+        self.source = 'tvdb'
+
         self.username = os.getenv("tvdb_username")
         self.user_key = os.getenv("tvdb_userkey")
         self.api_key = os.getenv("tvdb_apikey")
-
-        urllib3.disable_warnings()
-        self.http = urllib3.PoolManager()
 
 
 

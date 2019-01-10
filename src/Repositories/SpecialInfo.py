@@ -1,7 +1,15 @@
 import attr
 
+from Repositories.Repository import Repository, RepositoryTypes
+
+
+
 @attr.s
-class SpecialInfo:
+class SpecialInfo(Repository):
+    """
+    Bespoke DB source for Chrysalis info.
+    """
+
 
     # region Constants
 
@@ -31,6 +39,9 @@ class SpecialInfo:
     # region Constructors
 
     def __attrs_post_init__(self):
+        self.type = RepositoryTypes.SPECIAL
+        self.source = 'chrysalis'
+
         self.set_season()
 
     # endregion

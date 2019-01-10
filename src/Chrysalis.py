@@ -224,7 +224,7 @@ class Chrysalis:
 		"""
 
 		if args.rename is not None:
-			subs = [item for item in self.subscriptions if item['name'] == args.subscription]
+			subs = [item for item in self.subscriptions if item.name == args.subscription]
 
 			subscription = subs[0] if subs else None
 
