@@ -3,6 +3,9 @@
 import attr
 import os
 
+from Repositories import REPOSITORIES
+from Destinations import DESTINATIONS
+
 # endregion
 
 
@@ -33,6 +36,8 @@ class Subscription:
     class PostProcessing:
         output_directory: str = attr.ib()
 
+        destination: dict = attr.ib()
+
         series_id: int = attr.ib()
 
         repositories: list = attr.ib()
@@ -47,8 +52,22 @@ class Subscription:
         description: str = attr.ib()
 
         def __attrs_post_init__(self):
-            for repo in self.repositories:
-                importlib.import_module('Repositories.' + repo)
+            self.real_destinations: list = []
+            self.real_repositories: list = []
+
+            if self.repositories:
+                for repo in self.repositories:
+                    matching_repos = [item for item in REPOSITORIES if item.source == repo]
+
+                    if matching_repos:
+                        self.real_repositories.append(matching_repos[0]())
+
+            if self.destination:
+                matching_dests = [item for item in DESTINATIONS if item.destination == self.destination['name']]
+
+                if matching_dests:
+                    self.real_destinations.append(matching_dests[0]())
+ 
 
     dict_config = attr.ib(type=dict)
 
@@ -67,12 +86,12 @@ class Subscription:
         self.name = self.get_setting('name')
         self.url = self.get_setting('url')
 
-        self.logging = self.Logging(
+        self.logging = Subscription.Logging(
             path = self.get_setting('logging.path'),
             append = self.get_setting('logging.append')
         )
 
-        self.youtubedl_config = self.YoutubedlConfig(
+        self.youtubedl_config = Subscription.YoutubedlConfig(
             archive = self.get_setting('youtube-dl config.archive'),
             metadata_format = self.get_setting('youtube-dl config.metadata format'),
             output_format = self.get_setting('youtube-dl config.output format'),
@@ -80,8 +99,10 @@ class Subscription:
             extra_commands = self.get_setting('youtube-dl config.extra commands'),
         )
 
-        self.post_processing = self.PostProcessing(
+        self.post_processing = Subscription.PostProcessing(
             output_directory = self.get_setting('post-processing.output directory'),
+
+            destination = self.get_setting('post-processing.destination'),
 
             series_id = self.get_setting('post-processing.series id'),
 

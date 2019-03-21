@@ -6,15 +6,16 @@ import re
 import itertools
 
 from Utilities.Logger import Logger
-from Subscription import Subscription
 from Repositories.FileSystem import FileSystem
+from Repositories import REPOSITORIES
+from Destinations import DESTINATIONS
 
 # endregion
 
 
 
 @attr.s
-class Renamer:
+class PostProcessor:
     """
     Controlling class for the renaming facilities.
 
@@ -29,37 +30,78 @@ class Renamer:
     """
 
     file: str = attr.ib()
-    settings = attr.ib(type=Subscription)
-    path_info: pathlib.Path = None
-    series: dict = None
-    episode: dict = None
-    repositories: list = []
+    settings = attr.ib()
 
 
-    def rename(self):
+
+    def __attrs_post_init__(self):
+        self.path_info: pathlib.Path = None
+        self.series: dict = None
+        self.episode: dict = None
+        self.repositories: list = []
+
+
+        
+    def run(self):
         """
-        Runs all renaming post-processing on the file.
+        Runs all post-processing on the file.
         
         Returns:
-            str: Path to the renamed output directory.
+            str: Path to the post-processed output directory.
         """
 
         self.path_info = pathlib.Path(self.file)
 
-        Logger.log(r'Renamer', r'Processing {}...'.format(self.path_info.parent), 1)
+        Logger.log(r'PostProcessor', r'Processing {}...'.format(self.path_info.parent), 1)
 
-        self.get_api_info()
+        if self.settings.post_processing.repositories is not None and 'tvdb' in self.settings.post_processing.repositories:
+            self.get_api_info()
 
-        self.rename_video()
-        self.rename_subtitles()
-        self.rename_thumbnails()
-        self.rename_description()
+            self.rename_video()
+            self.rename_subtitles()
+            self.rename_thumbnails()
+            self.rename_description()
 
-        new_folder = self.rename_folder()
+            new_folder = self.rename_folder()
+        else:
+            new_folder = self.path_info.parent
+
+        
+        if self.settings.post_processing.output_directory:
+            self.move_from_staging_area()
+
+        if self.settings.post_processing.real_destinations:
+            destination = self.settings.post_processing.real_destinations[0]
+            
+            if destination:
+                destination.run(self)
 
         Logger.tabs -= 1
 
         return new_folder
+
+
+
+    def move_from_staging_area(self):
+        """
+        Moves the post-processed folder from the staging area
+        to the final path specified by the subscription.
+        """
+
+        current_path = self.path_info.parent
+
+        out_dir = self.settings.post_processing.output_directory
+
+        pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True) 
+
+        final_dir = out_dir + '/' + current_path.name
+
+        current_path.rename(final_dir)
+
+        self.path_info = pathlib.Path(final_dir) / self.path_info.name
+
+        Logger.log(r'PostProcessor', r'Refoldered to {}'.format(final_dir))
+
 
 
     def get_api_info(self):
@@ -182,8 +224,8 @@ class Renamer:
             value = self.episode[replacement_item]
         elif replacement_type == 'file':
             value = getattr(info, replacement_item)
-        elif replacement_type == 'special':
-            value = getattr(special, replacement_item)
+        #elif replacement_type == 'special':
+            #value = getattr(special, replacement_item)
 
         formatted_value = value
 
@@ -225,7 +267,7 @@ class Renamer:
             
         path.rename(new_filename)
 
-        Logger.log(r'Renamer', r'{} => {}'.format(path.name, replaced_template))
+        Logger.log(r'PostProcessor', r'{} => {}'.format(path.name, replaced_template))
 
         return new_filename
 

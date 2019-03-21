@@ -4,6 +4,14 @@ from enum import Flag, auto
 
 
 
+REPOSITORIES = []
+
+def RegisteredRepository(cls):
+    REPOSITORIES.append(cls)
+    return cls
+
+
+
 class RepositoryTypes(Flag):
     EPISODE =   auto()
     SERIES =    auto()
@@ -24,9 +32,7 @@ class Repository:
 
     type: RepositoryTypes = None
     source: str = None
-    http: urllib3.PoolManager = None
-
 
     def __init__(self):
         urllib3.disable_warnings()
-        self.http = urllib3.PoolManager()
+        self.http: urllib3.PoolManager = urllib3.PoolManager()

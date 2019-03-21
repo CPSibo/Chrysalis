@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from Utilities.Arguments import args
 from Utilities.Logger import Logger
 from Subscription import Subscription
+from Repositories import REPOSITORIES
+from Destinations import DESTINATIONS
 
 # endregion
 
@@ -140,7 +142,7 @@ class Chrysalis:
 		# Construct the post-processing call back into 
 		# Chrysalis to be run after each successful download.
 		if subscription.post_processing:
-			command += ' --exec \'"{}" "{}" --rename {{}} --subscription "{}"\''.format(
+			command += ' --exec \'"{}" "{}" --postprocess {{}} --subscription "{}"\''.format(
 				sys.executable, 
 				__file__, 
 				subscription.name
@@ -159,7 +161,7 @@ class Chrysalis:
 
 
 
-	def rename(self, file: str, subscription: Subscription) -> (str, int):
+	def postprocess(self, file: str, subscription: Subscription) -> str:
 		"""
 		Runs the post-processing for the given youtube-dl output file.
 		
@@ -169,49 +171,20 @@ class Chrysalis:
 		
 		Returns:
 			str: The absolute path to the folder where all the files were moved.
-			int: The season number of the file processed.
 		"""
 
-		from Renamer import Renamer
+		from PostProcessor import PostProcessor
 
-		Logger.log(r'Crysalis', r'Starting Renamer for {}'.format(file), 1)
+		Logger.log(r'Crysalis', r'Starting PostProcessor for {}'.format(file), 1)
 
-		renamer = Renamer(
+		postprocessor = PostProcessor(
 			file = file,
 			settings = subscription
 		)
 
-		(new_folder, season) = renamer.rename()
+		postprocessor.run()
 
 		Logger.tabs -= 1
-
-		return (new_folder, season)
-
-
-
-	def move_from_staging_area(self, current_path: str, subscription: Subscription, season: int):
-		"""
-		Moves the post-processed folder from the staging area
-		to the final path specified by the subscription.
-		
-		Args:
-			current_path (str): The absolute path to the staging-area folder.
-			subscription (Subscription): The settings under which to process
-				the files.
-			season (int): The season number for episode processed.
-		"""
-
-		current_path = pathlib.Path(current_path)
-
-		out_dir = subscription.post_processing.output_directory
-
-		pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True) 
-
-		final_dir = out_dir + '/' + current_path.name
-
-		current_path.rename(final_dir)
-
-		Logger.log(r'[Renamer]', r'Refoldered to {}'.format(final_dir))
 
 
 
@@ -223,7 +196,7 @@ class Chrysalis:
 			int: Status code.
 		"""
 
-		if args.rename is not None:
+		if args.postprocess is not None:
 			subs = [item for item in self.subscriptions if item.name == args.subscription]
 
 			subscription = subs[0] if subs else None
@@ -231,8 +204,7 @@ class Chrysalis:
 			if not subscription:
 				return -1
 
-			(new_folder, season) = self.rename(args.rename, subscription)
-			self.move_from_staging_area(new_folder, subscription, season)
+			self.postprocess(args.postprocess, subscription)
 		else:
 			for subscription in self.subscriptions:
 				self.process_subscription(subscription)

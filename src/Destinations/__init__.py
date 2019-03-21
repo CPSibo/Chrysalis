@@ -1,4 +1,4 @@
-from .Repository import REPOSITORIES
+from .Destination import DESTINATIONS
 
 # Import all classes in this directory so that classes with @register_class are registered. 
 
@@ -14,5 +14,5 @@ for x in glob(join(pwd, '*.py')):
 
 
 __all__ = [
-    'REPOSITORIES'
+    'DESTINATIONS'
 ]

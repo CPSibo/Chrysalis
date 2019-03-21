@@ -104,7 +104,7 @@
 			"episode folder":	"{series.seriesName} - S{episode.airedSeason:02d}E{episode.airedEpisodeNumber:03d} - {episode.episodeName}",
 			"video":			"{series.seriesName} - S{episode.airedSeason:02d}E{episode.airedEpisodeNumber:03d} - {episode.episodeName}.{file.ext}",
 			"subtitle":			"{series.seriesName} - S{episode.airedSeason:02d}E{episode.airedEpisodeNumber:03d} - {episode.episodeName}.{file.all_ext}",
-			"thumbnail":		"thumbnail.{file.ext}",
+			"thumbnail":		"{series.seriesName} - S{episode.airedSeason:02d}E{episode.airedEpisodeNumber:03d} - {episode.episodeName}.{file.ext}",
 			"description":		"description.txt"
 		}
 	}

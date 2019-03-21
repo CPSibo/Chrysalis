@@ -7,11 +7,11 @@ parser = argparse.ArgumentParser(description='Wrapper for youtube-dl.')
 
 
 parser.add_argument(
-    '--rename', 
-    metavar =   'R', 
+    '--postprocess', 
+    metavar =   'P', 
     type =      str, 
     nargs =     '?',
-    help =      'the file to rename'
+    help =      'the file to post-process'
 )
 
 parser.add_argument(

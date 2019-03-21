@@ -3,7 +3,9 @@ import json
 
 from Repositories.Repository import Repository, RepositoryTypes
 from Utilities.Logger import Logger
+from .Repository import RegisteredRepository
 
+@RegisteredRepository
 class TVDB(Repository):
     """
     API wrapper for TheTVDB.com.
@@ -16,18 +18,15 @@ class TVDB(Repository):
         jwt (str): JWT returned from login.
     """
 
-    base_url: str = 'https://api.thetvdb.com/'
-    username: str = None
-    user_key: str = None
-    api_key: str = None
-    jwt: str = None
+    source: str = 'tvdb'
+    type: RepositoryTypes = RepositoryTypes.EPISODE | RepositoryTypes.SERIES
 
 
 
     def __init__(self):
-        self.type = RepositoryTypes.EPISODE | RepositoryTypes.SERIES
-        self.source = 'tvdb'
-
+        self.base_url: str = 'https://api.thetvdb.com/'
+        self.api_key: str = None
+        self.jwt: str = None
         self.username = os.getenv("tvdb_username")
         self.user_key = os.getenv("tvdb_userkey")
         self.api_key = os.getenv("tvdb_apikey")
