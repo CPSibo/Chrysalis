@@ -71,20 +71,12 @@ class Subscription:
 
     dict_config = attr.ib(type=dict)
 
-    name: str = None
-    url: str = None
-
-    logging: Logging = None
-    youtubedl_config: YoutubedlConfig = None
-    post_processing: PostProcessing = None
-
-    staging_directory: str = None
-
 
 
     def __attrs_post_init__(self):
         self.name = self.get_setting('name')
         self.url = self.get_setting('url')
+        self.enabled = self.get_setting('enabled')
 
         self.logging = Subscription.Logging(
             path = self.get_setting('logging.path'),

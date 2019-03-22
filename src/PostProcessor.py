@@ -38,6 +38,7 @@ class PostProcessor:
         self.path_info: pathlib.Path = None
         self.series: dict = None
         self.episode: dict = None
+        self.special_values = None
         self.repositories: list = []
 
 
@@ -57,18 +58,31 @@ class PostProcessor:
         if self.settings.post_processing.repositories is not None and 'tvdb' in self.settings.post_processing.repositories:
             self.get_api_info()
 
-            self.rename_video()
+        if self.settings.post_processing.pattern is not None:
+            self.special_values = re.match(self.settings.post_processing.pattern, str(self.path_info))
+
+        if self.settings.post_processing.subtitle is not None:
             self.rename_subtitles()
+
+        if self.settings.post_processing.thumbnail is not None:
             self.rename_thumbnails()
+
+        if self.settings.post_processing.description is not None:
             self.rename_description()
 
+        if self.settings.post_processing.video is not None:
+            self.path_info = self.rename_video()
+
+        if self.settings.post_processing.episode_folder is not None:
             new_folder = self.rename_folder()
         else:
             new_folder = self.path_info.parent
 
+        self.path_info = new_folder / self.path_info.name
+
         
         if self.settings.post_processing.output_directory:
-            self.move_from_staging_area()
+            self.move_from_staging_area(new_folder)
 
         if self.settings.post_processing.real_destinations:
             destination = self.settings.post_processing.real_destinations[0]
@@ -82,13 +96,11 @@ class PostProcessor:
 
 
 
-    def move_from_staging_area(self):
+    def move_from_staging_area(self, current_path):
         """
         Moves the post-processed folder from the staging area
         to the final path specified by the subscription.
         """
-
-        current_path = self.path_info.parent
 
         out_dir = self.settings.post_processing.output_directory
 
@@ -224,13 +236,16 @@ class PostProcessor:
             value = self.episode[replacement_item]
         elif replacement_type == 'file':
             value = getattr(info, replacement_item)
-        #elif replacement_type == 'special':
-            #value = getattr(special, replacement_item)
+        elif replacement_type == 'special' and self.special_values is not None:
+            value = self.special_values.group(replacement_item)
 
         formatted_value = value
 
         if replacement_format is not None and replacement_format is not '':
-            formatted_value = (r'{' + replacement_format + r'}').format(value)
+            try:
+                formatted_value = (r'{' + replacement_format + r'}').format(value)
+            except ValueError:
+                formatted_value = (r'{' + replacement_format + r'}').format(int(value))
 
         replaced_template = replaced_template.replace(match[0], formatted_value)
 
@@ -278,7 +293,7 @@ class PostProcessor:
         Renames the video file.
         """
 
-        self.rename_file(
+        return self.rename_file(
             self.path_info, 
             self.settings.post_processing.video
         )
@@ -308,7 +323,7 @@ class PostProcessor:
         Renames the video description.
         """
 
-        self.rename_file(
+        return self.rename_file(
             self.path_info.with_suffix('.description'), 
             self.settings.post_processing.description
         )
@@ -342,10 +357,7 @@ class PostProcessor:
             str: Path to the renamed folder.
         """
 
-        return (
-            self.rename_file(
-                self.path_info.parent, 
-                self.settings.post_processing.folder
-            ),
-            self.episode['airedSeason']
+        return self.rename_file(
+            self.path_info.parent, 
+            self.settings.post_processing.episode_folder
         )

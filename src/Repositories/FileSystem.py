@@ -44,7 +44,7 @@ class FileSystem(Repository):
     # region Functions
 
     def get_path_info(self):
-        if self.path is not None and len(self.path) > 0:
+        if self.path is not None and len(str(self.path)) > 0:
             path_obj = pathlib.Path(self.path)
 
             self.name = path_obj.stem

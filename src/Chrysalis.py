@@ -73,9 +73,15 @@ class Chrysalis:
 			subscription (Subscription): The subscription to process.
 		"""
 
+		if not subscription.enabled:
+			return
+
 		Logger.log(r'Chrysalis', r'Processing "{}"...'.format(subscription.name))
 
 		self.setup_staging_directory(subscription)
+
+		if subscription.logging and subscription.logging.path:
+			pathlib.Path(subscription.logging.path).parent.mkdir(parents=True, exist_ok=True) 
 
 		command = self.construct_command(subscription)
 
