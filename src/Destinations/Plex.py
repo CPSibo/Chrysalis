@@ -83,8 +83,15 @@ class Plex(Destination):
 
         for item in self.metadata:
             if self.metadata[item]['found value']:
+                Logger.log(r'Plex', r'Setting metadata: {} = {}...'.format(item, self.metadata[item]['found value'][:20]))
                 values[item + '.value'] = self.metadata[item]['found value']
                 values[item + '.locked'] = 1
+
+        # Plex seems to have a race condition if you set values before it's
+        # finished the library scan. If the scan finishes afterwards, it seems
+        # like the values get reset.
+        episode.section().cancelUpdate()
+        time.sleep(10)
 
         episode.edit(**values)
 
@@ -129,7 +136,7 @@ class Plex(Destination):
                 # find the show if it's new.
                 tries += 1
                 section.update()
-                time.sleep(10)
+                time.sleep(10 * tries)
 
 
         if not series:
@@ -151,7 +158,7 @@ class Plex(Destination):
                 # find the episode.
                 tries += 1
                 section.update()
-                time.sleep(10)
+                time.sleep(10 * tries)
 
         if not episode:
             Logger.log('Plex', "Couldn't find episode!")
